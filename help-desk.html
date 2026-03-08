@@ -3,782 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help Desk — Sovereign Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <title>Support Manifest | Sovereign Hub</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+    <link rel="stylesheet" href="css/dashboard.css">
     <style>
-        :root {
-            --obsidian: #020617; --navy: #0a0f1e; --navy2: #0d1526;
-            --indigo: #6366f1; --indigo2: #4f46e5;
-            --emerald: #10b981; --gold: #f59e0b; --red: #ef4444;
-            --bg: #f8fafc; --border: #e2e8f0;
-            --text: #1e293b; --muted: #64748b; --white: #ffffff;
-            --mono: 'JetBrains Mono', monospace;
-            --sans: 'Plus Jakarta Sans', sans-serif;
+        /* --- 1. CONTROL BAR & HEADER --- */
+        .trinity-nav {
+            position: fixed; top: 0; left: 0; width: 100%; height: 80px;
+            background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(20px);
+            z-index: 10000; border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 50px;
         }
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body {
-            background: var(--obsidian); color: #e2e8f0;
-            font-family: var(--sans); -webkit-font-smoothing: antialiased;
-            overflow-x: hidden; min-height: 100vh;
+        .back-btn-box {
+            background: rgba(255, 255, 255, 0.05); border: 1.5px solid rgba(255,255,255,0.1);
+            padding: 12px 24px; border-radius: 14px; color: #94a3b8; text-decoration: none;
+            font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px;
+            transition: 0.4s; display: flex; align-items: center; gap: 10px;
+        }
+        .back-btn-box:hover { background: var(--shark-indigo); color: white; transform: translateX(-5px); }
+
+        .support-header { 
+            background: var(--shark-obsidian); 
+            background-image: radial-gradient(circle at 50% 100%, rgba(99,102,241,0.15) 0%, transparent 50%);
+            padding: 180px 0 140px; text-align: center; color: white; border-radius: 0 0 100px 100px;
         }
 
-        /* ── NAV — exact match to dashboard screenshot ── */
-        .main-nav {
-            background: rgba(10,15,30,0.97);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,.07);
-            height: 76px; position: sticky; top: 0; z-index: 4000;
-            display: flex; align-items: center;
-        }
-        .nav-container {
-            width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 2.5rem;
-            display: grid; grid-template-columns: 200px 1fr 260px; align-items: center;
-        }
-        .nav-brand { font-weight: 900; font-size: 1.25rem; letter-spacing: -0.04em; text-decoration: none; display: flex; align-items: center; gap: 2px; }
-        .nav-brand .b1 { color: white; } .nav-brand .b2 { color: var(--indigo); }
-        .nav-center-links { display: flex; gap: 6px; justify-content: center; }
-        .nav-center-links a { font-size: .82rem; font-weight: 700; text-decoration: none; color: #94a3b8; padding: .55rem 1.2rem; border-radius: 10px; transition: .25s; }
-        .nav-center-links a:hover { color: white; background: rgba(255,255,255,.06); }
-        .nav-center-links a.active { background: var(--indigo); color: white; box-shadow: 0 4px 16px rgba(99,102,241,.35); }
-        .nav-actions { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
-        .nav-back {
-            font-family: var(--mono); font-size: .65rem; font-weight: 800;
-            letter-spacing: .1em; text-transform: uppercase;
-            color: rgba(255,255,255,.5); text-decoration: none;
-            background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
-            padding: .55rem 1.1rem; border-radius: 10px; transition: .25s;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .nav-back:hover { background: rgba(255,255,255,.1); color: white; }
-        .btn-dash {
-            background: var(--indigo); color: white; padding: .6rem 1.4rem;
-            border-radius: 11px; font-size: .82rem; font-weight: 800;
-            text-decoration: none; box-shadow: 0 4px 16px rgba(99,102,241,.4); transition: .3s;
-        }
-        .btn-dash:hover { background: var(--indigo2); transform: translateY(-2px); }
-
-        /* ── PAGE HEADER — matches dashboard dark header ── */
-        .page-header {
-            background: var(--navy);
-            background-image:
-                radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99,102,241,.2) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 30% at 10% 80%, rgba(99,102,241,.06) 0%, transparent 60%);
-            padding: 5rem 0 11rem;
-            position: relative; overflow: hidden;
-        }
-        .page-header::before {
-            content: ''; position: absolute; inset: 0;
-            background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-            background-size: 60px 60px; pointer-events: none;
-        }
-        .header-inner { max-width: 1440px; margin: 0 auto; padding: 0 2.5rem; position: relative; z-index: 2; }
-        .header-tag {
-            font-family: var(--mono); font-size: .62rem; font-weight: 800;
-            letter-spacing: .22em; text-transform: uppercase; color: var(--indigo);
-            margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
-        }
-        .tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--indigo); animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.6);} 50%{box-shadow:0 0 0 8px rgba(99,102,241,0);} }
-        .header-title { font-size: clamp(2.5rem,6vw,5rem); font-weight: 900; letter-spacing: -0.04em; line-height: .92; color: white; margin-bottom: 16px; }
-        .header-sub { font-size: 1rem; color: rgba(255,255,255,.4); max-width: 500px; line-height: 1.75; }
-
-        /* quick action buttons in header (like dashboard) */
-        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 36px; }
-        .ha-btn {
-            background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
-            color: rgba(255,255,255,.8); padding: .7rem 1.4rem; border-radius: 13px;
-            font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
-            text-decoration: none; display: flex; align-items: center; gap: 8px;
-            cursor: pointer; border: none; font-family: var(--sans); transition: .3s;
-        }
-        .ha-btn:hover { background: var(--indigo); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(99,102,241,.25); }
-        .ha-btn.active-tab { background: var(--indigo); }
-
-        /* ── MAIN LAYOUT ── */
-        .desk-layout {
-            max-width: 1440px; margin: -6rem auto 0;
-            padding: 0 2.5rem 6rem;
-            display: grid; grid-template-columns: 300px 1fr 280px;
-            gap: 1.5rem; position: relative; z-index: 10;
-            align-items: start;
+        /* --- 2. CENTERED FOCUS LAYOUT --- */
+        .support-layout {
+            max-width: 1440px; margin: -80px auto 100px;
+            display: grid; grid-template-columns: 350px 1fr 350px; gap: 30px; padding: 0 40px;
         }
 
-        /* ── SIDEBAR CARDS (white — exact stat-card style) ── */
-        .side-card {
-            background: var(--white);
-            border-radius: 28px; padding: 2rem;
-            border: 1px solid rgba(99,102,241,.08);
-            box-shadow: 0 25px 50px rgba(0,0,0,.25);
-            margin-bottom: 1.2rem;
+        .info-card { background: white; border-radius: 40px; padding: 35px; border: 1px solid var(--shark-border); box-shadow: 0 40px 80px rgba(0,0,0,0.03); height: fit-content; }
+        .f-label { font-size: 0.6rem; font-weight: 900; color: var(--shark-indigo); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+
+        /* --- 3. TICKET BUFFER (CENTER) --- */
+        .ticket-list-container { background: white; border-radius: 50px; padding: 50px; border: 1px solid var(--shark-border); box-shadow: 0 50px 100px rgba(0,0,0,0.04); }
+        
+        .ticket-box { 
+            background: #f8fafc; border-radius: 25px; padding: 30px; border: 1px solid var(--shark-border); 
+            margin-bottom: 20px; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer;
         }
-        .side-card.dark {
-            background: var(--navy2);
-            border: 1px solid rgba(255,255,255,.08);
-            box-shadow: 0 25px 50px rgba(0,0,0,.4);
-        }
-        .card-label {
-            font-family: var(--mono); font-size: .58rem; font-weight: 800;
-            letter-spacing: .18em; text-transform: uppercase; color: var(--indigo);
-            margin-bottom: 18px; padding-bottom: 12px;
-            border-bottom: 1px solid rgba(99,102,241,.15); display: block;
-        }
-        .dark .card-label { border-bottom-color: rgba(255,255,255,.06); }
-        .system-row {
-            display: flex; justify-content: space-between; align-items: center;
-            font-family: var(--mono); font-size: .62rem; font-weight: 700;
-            padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04);
-        }
-        .system-row:last-child { border-bottom: none; }
-        .system-row .key { color: rgba(255,255,255,.35); }
-        .system-row .val-on { color: #4ade80; }
-        .system-row .val-warn { color: var(--gold); }
+        .ticket-box:hover { transform: scale(1.02); border-color: var(--shark-indigo); background: white; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
 
-        /* stat mini cards */
-        .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
-        .mini-stat { background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; text-align: center; }
-        .ms-val { font-family: var(--mono); font-size: 1.4rem; font-weight: 900; color: var(--text); }
-        .ms-label { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: 4px; }
+        .status-pill { font-size: 0.55rem; font-weight: 900; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; display: inline-block; margin-bottom: 10px; }
+        .st-pending { background: #fffbeb; color: #d97706; }
+        .st-review { background: #eef2ff; color: #4f46e5; }
+        .st-resolved { background: #ecfdf5; color: #059669; }
 
-        /* directive items (faq style) */
-        .directive { margin-bottom: 18px; }
-        .directive-title { font-size: .88rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }
-        .directive-body { font-size: .8rem; line-height: 1.65; color: var(--muted); }
-        .directive:last-child { margin-bottom: 0; }
-
-        /* contact items */
-        .contact-item { margin-bottom: 14px; }
-        .contact-label { font-family: var(--mono); font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--indigo); margin-bottom: 4px; }
-        .contact-val { font-size: .88rem; font-weight: 700; color: var(--text); }
-
-        /* ── CENTER PANEL ── */
-        .center-panel {
-            background: var(--white);
-            border-radius: 36px; padding: 2.5rem;
-            border: 1px solid rgba(99,102,241,.08);
-            box-shadow: 0 25px 50px rgba(0,0,0,.2);
-            min-height: 600px;
-        }
-
-        /* TABS inside panel */
-        .panel-tabs { display: flex; gap: 4px; margin-bottom: 2rem; background: var(--bg); padding: 5px; border-radius: 14px; width: fit-content; border: 1px solid var(--border); }
-        .panel-tab {
-            padding: .75rem 1.5rem; border-radius: 11px;
-            font-size: .82rem; font-weight: 700; cursor: pointer;
-            background: transparent; color: var(--muted);
-            border: none; font-family: var(--sans); transition: .2s;
-        }
-        .panel-tab.active { background: white; color: var(--indigo); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
-
-        .tab-pane { display: none; }
-        .tab-pane.active { display: block; }
-
-        /* ── TICKET LIST ── */
-        .panel-label {
-            font-family: var(--mono); font-size: .6rem; font-weight: 800;
-            letter-spacing: .16em; text-transform: uppercase; color: var(--indigo);
-            margin-bottom: 18px; padding-bottom: 12px;
-            border-bottom: 1px solid var(--border); display: block;
-        }
-
-        .ticket-card {
-            background: var(--bg); border: 1px solid var(--border);
-            border-radius: 20px; padding: 1.6rem;
-            margin-bottom: 1rem; cursor: pointer;
-            transition: .3s cubic-bezier(0.16,1,0.3,1);
-            position: relative; overflow: hidden;
-        }
-        .ticket-card::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-            width: 4px; background: transparent; transition: background .25s;
-        }
-        .ticket-card:hover { transform: scale(1.01); border-color: var(--indigo); background: white; box-shadow: 0 15px 30px rgba(0,0,0,.06); }
-        .ticket-card:hover::before { background: var(--indigo); }
-
-        .ticket-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 12px; }
-        .ticket-subject { font-size: 1.05rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
-        .ticket-meta { font-family: var(--mono); font-size: .58rem; color: var(--muted); flex-shrink: 0; }
-        .ticket-preview { font-size: .85rem; color: var(--muted); line-height: 1.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ticket-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
-        .ticket-uuid { font-family: var(--mono); font-size: .55rem; color: rgba(99,102,241,.6); }
-
-        .status-pill {
-            font-size: .55rem; font-weight: 900; text-transform: uppercase;
-            letter-spacing: .08em; padding: 4px 10px; border-radius: 7px; display: inline-block;
-        }
-        .st-pending  { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
-        .st-review   { background: #eef2ff; color: #4f46e5; border: 1px solid #ddd6fe; }
-        .st-resolved { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
-
-        /* empty state */
-        .empty-state { text-align: center; padding: 5rem 2rem; }
-        .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: .3; }
-        .empty-title { font-size: 1rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
-        .empty-sub { font-size: .85rem; color: var(--muted); }
-
-        /* loading */
-        .loading-state { text-align: center; padding: 4rem; color: var(--muted); }
-        .spinner { border: 3px solid var(--border); border-top-color: var(--indigo); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── SUBMIT FORM ── */
-        .form-group { margin-bottom: 1.4rem; }
-        .form-label {
-            font-family: var(--mono); font-size: .6rem; font-weight: 800;
-            letter-spacing: .14em; text-transform: uppercase; color: var(--indigo);
-            margin-bottom: 8px; display: block;
-        }
-        .form-input, .form-select, .form-textarea {
-            width: 100%; background: var(--bg);
-            border: 2px solid var(--border); border-radius: 14px;
-            padding: 14px 18px; font-size: .92rem; font-weight: 600;
-            color: var(--text); font-family: var(--sans); transition: .3s;
-        }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none; border-color: var(--indigo); background: white;
-            box-shadow: 0 0 0 4px rgba(99,102,241,.06);
-        }
-        .form-select { cursor: pointer; appearance: none; }
-        .form-textarea { resize: vertical; min-height: 130px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-
-        .char-count { font-family: var(--mono); font-size: .58rem; color: var(--muted); text-align: right; margin-top: 5px; }
-
-        .btn-submit {
-            width: 100%; background: var(--indigo); color: white;
-            padding: 1.1rem; border-radius: 14px; border: none;
-            font-size: .9rem; font-weight: 800; cursor: pointer;
-            font-family: var(--sans); transition: .3s;
-            box-shadow: 0 10px 20px rgba(99,102,241,.3);
-            margin-top: 8px;
-        }
-        .btn-submit:hover { background: var(--indigo2); transform: translateY(-3px); box-shadow: 0 16px 30px rgba(99,102,241,.4); }
-        .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-
-        /* toast */
-        .toast {
-            position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%) translateY(20px);
-            background: var(--text); color: white; padding: 14px 24px;
-            border-radius: 14px; font-size: .88rem; font-weight: 700;
-            z-index: 9999; opacity: 0; transition: all .4s;
-            pointer-events: none; box-shadow: 0 15px 30px rgba(0,0,0,.3);
-            display: flex; align-items: center; gap: 10px;
-        }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        .toast.success { background: var(--emerald); }
-        .toast.error { background: var(--red); }
-
-        /* ── DETAIL MODAL ── */
+        /* --- 4. FORENSIC MODAL --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2,6,23,.88); backdrop-filter: blur(14px);
-            z-index: 20000; display: none; align-items: center;
-            justify-content: center; padding: 20px;
+            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(12px);
+            z-index: 20000; display: none; align-items: center; justify-content: center; padding: 20px;
         }
-        .modal-overlay.open { display: flex; }
-        .modal-box {
-            background: white; width: 100%; max-width: 640px;
-            border-radius: 40px; padding: 3.5rem;
-            position: relative; box-shadow: 0 60px 120px rgba(0,0,0,.5);
-            animation: modalIn .35s ease;
+        .forensic-modal {
+            background: white; width: 100%; max-width: 650px; border-radius: 45px;
+            padding: 50px; position: relative; box-shadow: 0 50px 100px rgba(0,0,0,0.4);
+            animation: modalSlide 0.4s ease-out;
         }
-        @keyframes modalIn { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
-        .modal-close {
-            position: absolute; top: 28px; right: 28px; cursor: pointer;
-            font-family: var(--mono); font-weight: 900; color: var(--muted);
-            font-size: .68rem; border: 1.5px solid var(--border);
-            padding: 6px 14px; border-radius: 40px; transition: .2s;
-            letter-spacing: .08em;
-        }
-        .modal-close:hover { border-color: var(--red); color: var(--red); }
-        .modal-subject { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); margin: 12px 0 6px; }
-        .stream { margin-top: 24px; }
-        .stream-block {
-            background: var(--bg); border: 1px solid var(--border);
-            border-radius: 18px; padding: 1.5rem; margin-top: 14px;
-        }
-        .stream-block.admin-reply { border-left: 5px solid var(--emerald); background: #f0fdf4; }
-        .stream-block.awaiting { border-left: 5px solid var(--gold); background: #fffbeb; }
-        .stream-tag { font-family: var(--mono); font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
-        .stream-body { font-size: .95rem; line-height: 1.75; color: var(--text); font-weight: 600; }
+        @keyframes modalSlide { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-close { position: absolute; top: 30px; right: 30px; cursor: pointer; font-weight: 900; color: #94a3b8; font-size: 0.75rem; border: 1.5px solid #e2e8f0; padding: 6px 16px; border-radius: 50px; }
 
-        /* ── TICKER ── */
-        .ticker { position: fixed; bottom: 0; left: 0; right: 0; height: 36px; background: var(--indigo); z-index: 3000; overflow: hidden; display: flex; align-items: center; }
-        .ticker-track { display: flex; animation: tickRun 55s linear infinite; white-space: nowrap; }
-        .ticker-item { font-family: var(--mono); font-size: .58rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.85); padding: 0 48px; }
-        @keyframes tickRun { 0%{transform:translateX(0);} 100%{transform:translateX(-50%);} }
+        .stream-node { background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid var(--shark-border); margin-top: 25px; }
+        .stream-node.admin { border-left: 6px solid var(--shark-emerald); background: #f0fdf4; margin-top: 15px; }
+        .stream-label { font-size: 0.6rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 10px; }
+        .stream-content { font-size: 1rem; line-height: 1.6; color: var(--shark-obsidian); font-weight: 600; }
 
-        /* ── RESPONSIVE ── */
-        @media (max-width: 1100px) {
-            .desk-layout { grid-template-columns: 1fr; }
-            .nav-center-links { display: none; }
-            .nav-container { grid-template-columns: auto 1fr auto; }
-        }
-        @media (max-width: 640px) {
-            .header-inner, .desk-layout { padding-left: 1.2rem; padding-right: 1.2rem; }
-            .form-row { grid-template-columns: 1fr; }
-            .modal-box { padding: 2rem 1.5rem; }
-            .modal-subject { font-size: 1.4rem; }
-            .center-panel { padding: 1.5rem; }
-        }
+        #liveClock { font-family: 'JetBrains Mono'; color: #4ade80; font-weight: 900; }
     </style>
 </head>
 <body>
 
-<!-- ── NAV ── -->
-<header class="main-nav">
-    <div class="nav-container">
-        <a href="index.html" class="nav-brand"><span class="b1">SOVEREIGN </span><span class="b2">HUB</span></a>
-        <nav class="nav-center-links">
-            <a href="index.html">Home</a>
-            <a href="proposals.html">Marketplace</a>
-            <a href="support-info.html" class="active">Help Desk</a>
-        </nav>
-        <div class="nav-actions">
-            <a href="dashboard.html" class="nav-back">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Dashboard
+    <!-- TRINITY NAV -->
+    <nav class="trinity-nav">
+        <div class="nav-left">
+            <a href="dashboard.html" class="back-btn-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Exit Hub
             </a>
-            <a href="dashboard.html" class="btn-dash" id="dashBtn">Open Dashboard</a>
         </div>
-    </div>
-</header>
-
-<!-- ── PAGE HEADER ── -->
-<div class="page-header">
-    <div class="header-inner">
-        <div class="header-tag"><span class="tag-dot"></span> CENTRAL OVERSIGHT ASSISTANCE</div>
-        <h1 class="header-title">Help Desk</h1>
-        <p class="header-sub">Forensic inquiry tracking and syndicate directives. Submit a ticket or track your existing requests.</p>
-        <div class="header-actions">
-            <button class="ha-btn active-tab" onclick="switchTab('tickets', this)">📋 My Tickets</button>
-            <button class="ha-btn" onclick="switchTab('submit', this)">✉️ New Inquiry</button>
-            <a href="support-info.html" class="ha-btn" style="text-decoration:none;">🔄 Refresh</a>
+        <div class="nav-center">
+            <h2 class="central-statement" style="border:none; letter-spacing: 6px; opacity: 0.5;">SUPPORT_MANIFEST_v4</h2>
         </div>
-    </div>
-</div>
+        <div class="nav-right"><div id="liveClock">00:00:00</div></div>
+    </nav>
 
-<!-- ── MAIN LAYOUT ── -->
-<main class="desk-layout">
+    <header class="support-header">
+        <span style="font-size: 0.75rem; font-weight: 900; letter-spacing: 5px; color: var(--shark-indigo); text-transform: uppercase;">Central Oversight Assistance</span>
+        <h1 style="font-size: 5rem; font-weight: 900; letter-spacing: -4px; margin: 10px 0; line-height: 1;">Help Desk</h1>
+        <p style="opacity: 0.5; font-size: 1.1rem; font-weight: 500;">Forensic inquiry tracking and syndicate directives.</p>
+    </header>
 
-    <!-- LEFT SIDEBAR -->
-    <aside>
-        <!-- System Health — dark card like dashboard header -->
-        <div class="side-card dark">
-            <span class="card-label" style="color:rgba(255,255,255,.25);">Health Matrix</span>
-            <div class="system-row">
-                <span class="key">SYNDICATE_LINK</span>
-                <span class="val-on">● ONLINE</span>
-            </div>
-            <div class="system-row">
-                <span class="key">LEDGER_SYNC</span>
-                <span class="val-on">● STABLE</span>
-            </div>
-            <div class="system-row">
-                <span class="key">SUPPORT_NODE</span>
-                <span class="val-on">● ACTIVE</span>
-            </div>
-            <div class="system-row">
-                <span class="key">RESPONSE_ETA</span>
-                <span class="val-warn">12–24 HRS</span>
-            </div>
-            <div style="font-family:var(--mono);font-size:.65rem;color:#4ade80;margin-top:18px;text-align:center;font-weight:800;" id="sidebarClock">00:00:00</div>
-        </div>
-
-        <!-- Ticket Stats — white stat-card style -->
-        <div class="side-card">
-            <span class="card-label">Your Ticket Stats</span>
-            <div class="mini-stats" id="ticketStats">
-                <div class="mini-stat"><div class="ms-val" id="statTotal">—</div><div class="ms-label">Total</div></div>
-                <div class="mini-stat"><div class="ms-val" id="statPending">—</div><div class="ms-label">Pending</div></div>
-                <div class="mini-stat"><div class="ms-val" id="statReview">—</div><div class="ms-label">Review</div></div>
-                <div class="mini-stat"><div class="ms-val" id="statResolved">—</div><div class="ms-label">Resolved</div></div>
-            </div>
-        </div>
-
-        <!-- Resolution Ethics -->
-        <div class="side-card">
-            <span class="card-label">Resolution Ethics</span>
-            <div class="directive">
-                <div class="directive-title">Financial Discrepancies</div>
-                <div class="directive-body">Investment amount mismatches and deal record errors are top priority. Resolved within 6 hours.</div>
-            </div>
-            <div class="directive">
-                <div class="directive-title">Verification Issues</div>
-                <div class="directive-body">Profile and proposal verification delays are escalated to the senior audit team immediately.</div>
-            </div>
-            <div class="directive">
-                <div class="directive-title">General Inquiries</div>
-                <div class="directive-body">All tickets are manually reviewed by a syndicate officer. Typical window is 12–24 hours.</div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- CENTER PANEL -->
-    <section class="center-panel">
-
-        <!-- MY TICKETS TAB -->
-        <div class="tab-pane active" id="tab-tickets">
-            <span class="panel-label">Active Inquiry Buffer</span>
-            <div id="ticketsContainer">
-                <div class="loading-state">
-                    <div class="spinner"></div>
-                    <div style="font-family:var(--mono);font-size:.7rem;color:var(--muted);font-weight:800;">SCANNING FOR LOGS...</div>
+    <main class="support-layout">
+        
+        <!-- SIDEBAR LEFT: SYSTEM STATS -->
+        <aside>
+            <div class="info-card" style="background: var(--shark-obsidian); color: white; margin-bottom: 25px;">
+                <span class="f-label" style="color:rgba(255,255,255,0.3); border-bottom-color:rgba(255,255,255,0.1);">Health Matrix</span>
+                <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono'; font-size:0.65rem; margin-bottom:12px;">
+                    <span>SYNDICATE_LINK</span> <span style="color:#4ade80">ONLINE</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- SUBMIT TAB -->
-        <div class="tab-pane" id="tab-submit">
-            <span class="panel-label">New Inquiry Submission</span>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" id="f-category">
-                        <option value="">Select category...</option>
-                        <option value="financial">💰 Financial / Deal Issue</option>
-                        <option value="verification">✅ Verification Problem</option>
-                        <option value="offer">📋 Offer / Proposal Issue</option>
-                        <option value="account">👤 Account & Profile</option>
-                        <option value="technical">⚙️ Technical Bug</option>
-                        <option value="other">❓ Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Priority</label>
-                    <select class="form-select" id="f-priority">
-                        <option value="normal">Normal</option>
-                        <option value="high">High — Time Sensitive</option>
-                        <option value="critical">Critical — Financial Impact</option>
-                    </select>
+                <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono'; font-size:0.65rem;">
+                    <span>LEDGER_SYNC</span> <span style="color:#4ade80">STABLE</span>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Subject</label>
-                <input type="text" class="form-input" id="f-subject" placeholder="Brief description of the issue..." maxlength="120">
+            <div class="info-card">
+                <span class="f-label">Resolution Ethics</span>
+                <p style="font-size: 0.85rem; color: var(--shark-muted); line-height: 1.7;">
+                    Every inquiry is audited manually. We prioritize financial discrepancies and verification issues. Response window is typically 12-24 hours.
+                </p>
             </div>
+        </aside>
 
-            <div class="form-group">
-                <label class="form-label">Full Description</label>
-                <textarea class="form-textarea" id="f-message" placeholder="Describe the issue in detail. Include any relevant proposal IDs, offer amounts, or error messages..." maxlength="2000" oninput="updateCount(this)"></textarea>
-                <div class="char-count"><span id="charCount">0</span> / 2000</div>
+        <!-- CENTER: ACTIVE TICKETS -->
+        <section class="ticket-list-container">
+            <span class="f-label">Active Inquiry Buffer</span>
+            <div id="userTicketsContainer">
+                <p style="text-align:center; opacity:0.3; padding: 4rem; font-weight: 800;">SCANNING_FOR_LOGS...</p>
             </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="font-size: 0.8rem; color: var(--shark-muted);">Need more help? Use the support node on your dashboard.</p>
+            </div>
+        </section>
 
-            <div class="form-group">
-                <label class="form-label">Reference ID (optional)</label>
-                <input type="text" class="form-input" id="f-ref" placeholder="Proposal ID, Offer ID, or Deal ID...">
+        <!-- SIDEBAR RIGHT: FAQ -->
+        <aside>
+            <div class="info-card">
+                <span class="f-label">System Directives</span>
+                <div style="margin-bottom: 25px;">
+                    <h4 style="font-weight: 800; font-size: 0.95rem; margin-bottom: 5px;">Success Score Logic</h4>
+                    <p style="font-size: 0.8rem; color: var(--shark-muted);">Calculated based on milestones achieved (40%), funding status (30%), and operational time (30%).</p>
+                </div>
+                <div>
+                    <h4 style="font-weight: 800; font-size: 0.95rem; margin-bottom: 5px;">Verification Time</h4>
+                    <p style="font-size: 0.8rem; color: var(--shark-muted);">New entities and assets require a 24-hour forensic window for global marketplace listing.</p>
+                </div>
             </div>
+        </aside>
 
-            <button class="btn-submit" id="submitBtn" onclick="submitTicket()">
-                🚀 Transmit Inquiry
-            </button>
+    </main>
 
-            <p style="font-size:.78rem;color:var(--muted);text-align:center;margin-top:14px;line-height:1.6;">
-                A syndicate officer will review your inquiry and respond within 12–24 hours.<br>
-                You can track your ticket status in the <strong>My Tickets</strong> tab.
-            </p>
-        </div>
+    <!-- THE FORENSIC DETAIL MODAL (Popup of User Submission & Admin Note) -->
+    <div id="detailModal" class="modal-overlay" onclick="closeDetailModal()">
+        <div class="forensic-modal" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeDetailModal()">CLOSE_TERMINAL</div>
+            <span class="f-label">Inquiry Case File</span>
+            <h2 id="modalSubject" style="font-size: 2.2rem; font-weight: 900; letter-spacing: -1.5px; margin: 10px 0 5px;">Subject</h2>
+            <div id="modalStatus" style="margin-bottom: 10px;"></div>
 
-    </section>
+            <div class="data-stream">
+                <div class="stream-node">
+                    <span class="stream-label">User Transmission (Original Message)</span>
+                    <div id="modalUserMsg" class="stream-content">-</div>
+                </div>
 
-    <!-- RIGHT SIDEBAR -->
-    <aside>
-        <!-- System Directives / FAQ -->
-        <div class="side-card">
-            <span class="card-label">System Directives</span>
-            <div class="directive">
-                <div class="directive-title">Success Score Logic</div>
-                <div class="directive-body">Calculated from milestones achieved (40%), funding status (30%), and operational time (30%).</div>
-            </div>
-            <div class="directive" style="margin-top:16px;">
-                <div class="directive-title">Verification Window</div>
-                <div class="directive-body">New entities require a 24-hour forensic audit before appearing in the global marketplace.</div>
-            </div>
-            <div class="directive" style="margin-top:16px;">
-                <div class="directive-title">Offer Terms</div>
-                <div class="directive-body">Once an offer is accepted, it cannot be reversed. Ensure all terms are reviewed before accepting.</div>
-            </div>
-            <div class="directive" style="margin-top:16px;">
-                <div class="directive-title">Deal Privacy</div>
-                <div class="directive-body">Deal details are only visible to the two parties involved. Admins can access records for audit only.</div>
-            </div>
-        </div>
-
-        <!-- Contact -->
-        <div class="side-card">
-            <span class="card-label">Direct Contact</span>
-            <div class="contact-item">
-                <div class="contact-label">Neural Mail</div>
-                <div class="contact-val">terminal@sovereignhub.com</div>
-            </div>
-            <div class="contact-item">
-                <div class="contact-label">HQ Location</div>
-                <div class="contact-val">Bangalore, India</div>
-            </div>
-            <div class="contact-item">
-                <div class="contact-label">Response Window</div>
-                <div class="contact-val">12 – 24 Hours</div>
-            </div>
-        </div>
-    </aside>
-
-</main>
-
-<!-- ── DETAIL MODAL ── -->
-<div class="modal-overlay" id="detailModal">
-    <div class="modal-box" onclick="event.stopPropagation()">
-        <div class="modal-close" onclick="closeModal()">✕ CLOSE</div>
-        <span style="font-family:var(--mono);font-size:.58rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--indigo);">Inquiry Case File</span>
-        <h2 class="modal-subject" id="modalSubject">—</h2>
-        <div id="modalStatusRow" style="display:flex;gap:8px;align-items:center;margin-bottom:4px;"></div>
-        <div style="font-family:var(--mono);font-size:.55rem;color:var(--muted);" id="modalDate"></div>
-
-        <div class="stream">
-            <div class="stream-block">
-                <span class="stream-tag">User Transmission — Original Message</span>
-                <div class="stream-body" id="modalUserMsg">—</div>
-            </div>
-            <div class="stream-block" id="adminBlock">
-                <span class="stream-tag">Syndicate Directive — Admin Response</span>
-                <div class="stream-body" id="modalAdminMsg">—</div>
+                <div class="stream-node admin" id="adminNode">
+                    <span class="stream-label">Syndicate Directive (Admin Response)</span>
+                    <div id="modalAdminMsg" class="stream-content" style="font-style: italic;">Awaiting officer directive...</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- ── TICKER ── -->
-<div class="ticker">
-    <div class="ticker-track">
-        <span class="ticker-item">● System Online</span>
-        <span class="ticker-item">◆ Support Buffer: Active</span>
-        <span class="ticker-item">◆ Audit Log: Synced</span>
-        <span class="ticker-item">◆ Platform Volume: +₹4.2M (24h)</span>
-        <span class="ticker-item">◆ Response ETA: 12–24 Hours</span>
-        <span class="ticker-item">◆ Network Hash: Verified</span>
-        <span class="ticker-item">● System Online</span>
-        <span class="ticker-item">◆ Support Buffer: Active</span>
-        <span class="ticker-item">◆ Audit Log: Synced</span>
-        <span class="ticker-item">◆ Platform Volume: +₹4.2M (24h)</span>
-        <span class="ticker-item">◆ Response ETA: 12–24 Hours</span>
-        <span class="ticker-item">◆ Network Hash: Verified</span>
-    </div>
-</div>
+    <script src="js/config.js"></script>
+    <script>
+        let allMyTickets = [];
 
-<!-- ── TOAST ── -->
-<div class="toast" id="toast"></div>
+        function updateClock() { document.getElementById('liveClock').textContent = new Date().toLocaleTimeString('en-US', { hour12: false }); }
+        setInterval(updateClock, 1000); updateClock();
 
-<script src="js/config.js"></script>
-<script>
-let allTickets = [];
-let currentUserId = null;
+        async function loadTickets() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return window.location.href = 'auth.html';
 
-// ── Clock ────────────────────────────────────────────────────
-function tick() {
-    const now = new Date();
-    const pad = n => String(n).padStart(2,'0');
-    document.getElementById('sidebarClock').textContent =
-        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-}
-tick(); setInterval(tick, 1000);
+                const { data: tickets, error } = await supabase
+                    .from('support_inquiries')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
 
-// ── Tab switching ────────────────────────────────────────────
-function switchTab(tab, btn) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.querySelectorAll('.ha-btn').forEach(b => b.classList.remove('active-tab'));
-    if (btn) btn.classList.add('active-tab');
-}
+                if (error) throw error;
+                allMyTickets = tickets;
 
-// ── Toast ────────────────────────────────────────────────────
-function showToast(msg, type='') {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.className = 'toast ' + type;
-    setTimeout(() => t.classList.add('show'), 10);
-    setTimeout(() => t.classList.remove('show'), 3500);
-}
+                const container = document.getElementById('userTicketsContainer');
+                if (!tickets?.length) {
+                    container.innerHTML = "<p style='text-align:center; opacity:0.3; padding:4rem; font-weight:800;'>NO_ACTIVE_RECORDS</p>";
+                    return;
+                }
 
-// ── Char counter ─────────────────────────────────────────────
-function updateCount(el) {
-    document.getElementById('charCount').textContent = el.value.length;
-}
-
-// ── Load Tickets ─────────────────────────────────────────────
-async function loadTickets() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            document.getElementById('ticketsContainer').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">🔐</div>
-                    <div class="empty-title">Authentication Required</div>
-                    <div class="empty-sub">Please <a href="auth.html" style="color:var(--indigo);font-weight:700;">sign in</a> to view your support tickets.</div>
-                </div>`;
-            return;
-        }
-        currentUserId = user.id;
-
-        const { data: tickets, error } = await supabase
-            .from('support_inquiries')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        allTickets = tickets || [];
-
-        // update stats
-        const total    = allTickets.length;
-        const pending  = allTickets.filter(t => t.status === 'pending').length;
-        const review   = allTickets.filter(t => t.status === 'under_review').length;
-        const resolved = allTickets.filter(t => t.status === 'resolved').length;
-        document.getElementById('statTotal').textContent    = total;
-        document.getElementById('statPending').textContent  = pending;
-        document.getElementById('statReview').textContent   = review;
-        document.getElementById('statResolved').textContent = resolved;
-
-        const container = document.getElementById('ticketsContainer');
-        if (!allTickets.length) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📭</div>
-                    <div class="empty-title">No Active Records</div>
-                    <div class="empty-sub">You haven't submitted any support inquiries yet. Use <strong>New Inquiry</strong> to get started.</div>
-                </div>`;
-            return;
+                container.innerHTML = tickets.map(t => {
+                    let statusClass = t.status === 'pending' ? 'st-pending' : (t.status === 'under_review' ? 'st-review' : 'st-resolved');
+                    return `
+                        <div class="ticket-box" onclick="openDetailModal('${t.id}')">
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <span class="status-pill ${statusClass}">${t.status.replace('_', ' ')}</span>
+                                <span style="font-family:'JetBrains Mono'; font-size:0.6rem; color:#94a3b8;">${new Date(t.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <div style="font-weight: 900; font-size: 1.2rem; letter-spacing: -0.5px; margin-top:5px;">${t.subject}</div>
+                            <p style="font-size:0.85rem; color:var(--shark-muted); margin-top:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${t.message}</p>
+                            <span style="font-family:'JetBrains Mono'; font-size:0.55rem; color:var(--shark-indigo); display:block; margin-top:15px; opacity:0.6;">UUID: ${t.id}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) { console.error("Sync Error:", err); }
         }
 
-        container.innerHTML = allTickets.map(t => {
-            const cls = t.status === 'pending' ? 'st-pending' : t.status === 'under_review' ? 'st-review' : 'st-resolved';
-            const label = t.status === 'under_review' ? 'Under Review' : t.status.charAt(0).toUpperCase() + t.status.slice(1);
-            const date = new Date(t.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-            return `
-                <div class="ticket-card" onclick="openModal('${t.id}')">
-                    <div class="ticket-top">
-                        <div class="ticket-subject">${escHtml(t.subject)}</div>
-                        <div class="ticket-meta">${date}</div>
-                    </div>
-                    <div class="ticket-preview">${escHtml(t.message)}</div>
-                    <div class="ticket-footer">
-                        <span class="status-pill ${cls}">${label}</span>
-                        <span class="ticket-uuid">UUID: ${t.id.substring(0,16)}...</span>
-                    </div>
-                </div>`;
-        }).join('');
+        function openDetailModal(id) {
+            const ticket = allMyTickets.find(t => t.id === id);
+            if (!ticket) return;
 
-    } catch(err) {
-        console.error(err);
-        document.getElementById('ticketsContainer').innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">⚠️</div>
-                <div class="empty-title">Sync Error</div>
-                <div class="empty-sub">Could not load tickets. Please refresh the page.</div>
-            </div>`;
-    }
-}
+            document.getElementById('modalSubject').textContent = ticket.subject;
+            document.getElementById('modalUserMsg').textContent = ticket.message;
+            
+            const statusEl = document.getElementById('modalStatus');
+            let statusClass = ticket.status === 'pending' ? 'st-pending' : (ticket.status === 'under_review' ? 'st-review' : 'st-resolved');
+            statusEl.innerHTML = `<span class="status-pill ${statusClass}">${ticket.status.replace('_', ' ')}</span>`;
 
-// ── Open Modal ───────────────────────────────────────────────
-function openModal(id) {
-    const t = allTickets.find(x => x.id === id);
-    if (!t) return;
+            const adminMsgEl = document.getElementById('modalAdminMsg');
+            const adminNode = document.getElementById('adminNode');
+            
+            if (ticket.admin_notes) {
+                adminMsgEl.textContent = ticket.admin_notes;
+                adminMsgEl.style.fontStyle = "normal";
+                adminMsgEl.style.color = "var(--shark-obsidian)";
+                adminNode.style.opacity = "1";
+            } else {
+                adminMsgEl.textContent = "Your inquiry is currently in the audit buffer. A syndicate officer will respond shortly with a directive.";
+                adminMsgEl.style.fontStyle = "italic";
+                adminMsgEl.style.color = "var(--shark-muted)";
+                adminNode.style.opacity = "0.6";
+            }
 
-    document.getElementById('modalSubject').textContent = t.subject;
-    const cls   = t.status === 'pending' ? 'st-pending' : t.status === 'under_review' ? 'st-review' : 'st-resolved';
-    const label = t.status === 'under_review' ? 'Under Review' : t.status.charAt(0).toUpperCase() + t.status.slice(1);
-    document.getElementById('modalStatusRow').innerHTML = `<span class="status-pill ${cls}">${label}</span>`;
-    document.getElementById('modalDate').textContent = 'Submitted: ' + new Date(t.created_at).toLocaleString('en-IN');
-    document.getElementById('modalUserMsg').textContent = t.message;
-
-    const adminBlock = document.getElementById('adminBlock');
-    const adminMsg   = document.getElementById('modalAdminMsg');
-    if (t.admin_notes) {
-        adminBlock.className = 'stream-block admin-reply';
-        adminMsg.textContent = t.admin_notes;
-    } else {
-        adminBlock.className = 'stream-block awaiting';
-        adminMsg.textContent = 'Your inquiry is in the audit buffer. A syndicate officer will respond shortly.';
-    }
-
-    document.getElementById('detailModal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeModal() {
-    document.getElementById('detailModal').classList.remove('open');
-    document.body.style.overflow = '';
-}
-document.getElementById('detailModal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-});
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// ── Submit Ticket ────────────────────────────────────────────
-async function submitTicket() {
-    const category = document.getElementById('f-category').value;
-    const priority = document.getElementById('f-priority').value;
-    const subject  = document.getElementById('f-subject').value.trim();
-    const message  = document.getElementById('f-message').value.trim();
-    const ref      = document.getElementById('f-ref').value.trim();
-
-    if (!subject) { showToast('⚠️ Please enter a subject.', 'error'); return; }
-    if (!message) { showToast('⚠️ Please describe your issue.', 'error'); return; }
-    if (message.length < 20) { showToast('⚠️ Please provide more detail (min 20 chars).', 'error'); return; }
-
-    const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.textContent = '⏳ Transmitting...';
-
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { showToast('🔐 Please sign in first.', 'error'); btn.disabled = false; btn.textContent = '🚀 Transmit Inquiry'; return; }
-
-        const payload = { user_id: user.id, subject, message, status: 'pending' };
-        if (category) payload.category = category;
-        if (priority)  payload.priority = priority;
-        if (ref)       payload.reference_id = ref;
-
-        const { error } = await supabase.from('support_inquiries').insert(payload);
-        if (error) throw error;
-
-        showToast('✅ Inquiry transmitted successfully!', 'success');
-
-        // reset form
-        ['f-category','f-priority','f-subject','f-message','f-ref'].forEach(id => {
-            const el = document.getElementById(id);
-            el.tagName === 'SELECT' ? el.selectedIndex = 0 : (el.value = '');
-        });
-        document.getElementById('charCount').textContent = '0';
-
-        // switch to tickets tab and reload
-        switchTab('tickets');
-        document.querySelector('.ha-btn').classList.add('active-tab');
-        setTimeout(loadTickets, 500);
-
-    } catch(err) {
-        console.error(err);
-        showToast('❌ Error: ' + (err.message || 'Please try again.'), 'error');
-    } finally {
-        btn.disabled = false; btn.textContent = '🚀 Transmit Inquiry';
-    }
-}
-
-function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Session check ────────────────────────────────────────────
-(async () => {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            document.getElementById('dashBtn').textContent = 'Dashboard';
-            document.getElementById('dashBtn').href = 'dashboard.html';
+            document.getElementById('detailModal').style.display = 'flex';
         }
-    } catch(e) {}
-})();
 
-window.onload = loadTickets;
-</script>
+        function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
+        window.onload = loadTickets;
+    </script>
 </body>
 </html>
